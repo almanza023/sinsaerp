@@ -15,59 +15,57 @@ type
     UniPageControl1: TUniPageControl;
     UniTabSheet1: TUniTabSheet;
     UniPanel1: TUniPanel;
-    UniMemo1: TUniMemo;
     UniLabel5: TUniLabel;
-    UniMemo2: TUniMemo;
+    enfermedadactual: TUniMemo;
     UniLabel6: TUniLabel;
-    UniMemo3: TUniMemo;
+    antecedentes: TUniMemo;
     UniLabel7: TUniLabel;
-    UniEdit3: TUniEdit;
+    sistolica: TUniEdit;
     UniLabel8: TUniLabel;
-    UniEdit4: TUniEdit;
+    distolica: TUniEdit;
     UniLabel9: TUniLabel;
-    UniEdit5: TUniEdit;
+    fr: TUniEdit;
     UniLabel10: TUniLabel;
-    UniEdit6: TUniEdit;
+    fc: TUniEdit;
     UniLabel11: TUniLabel;
-    UniEdit7: TUniEdit;
+    temp: TUniEdit;
     UniLabel12: TUniLabel;
-    UniEdit8: TUniEdit;
+    peso: TUniEdit;
     UniLabel13: TUniLabel;
-    UniEdit9: TUniEdit;
+    cintura: TUniEdit;
     UniLabel14: TUniLabel;
-    UniEdit10: TUniEdit;
+    talla: TUniEdit;
     UniLabel15: TUniLabel;
-    UniEdit11: TUniEdit;
+    imc: TUniEdit;
     UniLabel16: TUniLabel;
-    UniEdit12: TUniEdit;
+    dxnutricional: TUniEdit;
     UniLabel17: TUniLabel;
     UniMemo4: TUniMemo;
     UniLabel18: TUniLabel;
-    UniEdit14: TUniEdit;
-    UniSpeedButton1: TUniSpeedButton;
+    descdxp: TUniEdit;
+    btnAgregarDx: TUniSpeedButton;
     UniLabel19: TUniLabel;
-    UniMemo6: TUniMemo;
+    revisionSistema: TUniMemo;
     Btnguardar: TUniSpeedButton;
     UniSpeedButton2: TUniSpeedButton;
     UniLabel42: TUniLabel;
     UniLabel43: TUniLabel;
-    UniEdit1: TUniEdit;
+    nombreAcom: TUniEdit;
     UniLabel44: TUniLabel;
-    UniEdit2: TUniEdit;
     UniLabel45: TUniLabel;
-    UniComboBox2: TUniComboBox;
-    UniSpeedButton7: TUniSpeedButton;
+    cParentesco: TUniComboBox;
+    btnMostrarComplemento: TUniSpeedButton;
     UniLabel46: TUniLabel;
-    UniMemo9: TUniMemo;
+    planConducta: TUniMemo;
     UniLabel47: TUniLabel;
-    UniComboBox3: TUniComboBox;
+    CFinalidad: TUniComboBox;
     UniLabel48: TUniLabel;
-    UniComboBox4: TUniComboBox;
+    cCausa: TUniComboBox;
     UniLabel49: TUniLabel;
-    UniComboBox5: TUniComboBox;
-    UniEdit13: TUniEdit;
+    cImpresionDiag: TUniComboBox;
+    dxp: TUniEdit;
     UniPanel2: TUniPanel;
-    UniDBGrid1: TUniDBGrid;
+    DbGridEvoluciones: TUniDBGrid;
     UniLabel20: TUniLabel;
     UniLabel21: TUniLabel;
     UniMemo8: TUniMemo;
@@ -99,16 +97,22 @@ type
     fechaAsignacion: TUniDateTimePicker;
     UniSpeedButton6: TUniSpeedButton;
     imagenPerfil: TUniImage;
-    UniMemo5: TUniMemo;
+    diagnosticos: TUniMemo;
     UniLabel24: TUniLabel;
     lblContrato: TUniLabel;
-    UniMemo7: TUniMemo;
+    masDx: TUniMemo;
     UniLabel1: TUniLabel;
     lblRips: TUniLabel;
+    telefonoAcom: TUniNumberEdit;
     procedure UniSpeedButton6Click(Sender: TObject);
     procedure UniFormShow(Sender: TObject);
+    procedure ShowCallback(Sender: TComponent; Asresult: Integer);
+    procedure btnMostrarComplementoClick(Sender: TObject);
+    procedure habilitarHistoriaInicial();
   private
     { Private declarations }
+    consulta: string;
+    rips: string;
   public
     { Public declarations }
   end;
@@ -120,50 +124,94 @@ implementation
 {$R *.dfm}
 
 uses
-  uniGUIVars, MainModule, uniGUIApplication, MedicosCita;
+  uniGUIVars, MainModule, uniGUIApplication, MedicosCita, ComplementoHistorias;
 
 function MainForm: TMainForm;
 begin
   Result := TMainForm(UniMainModule.GetFormInstance(TMainForm));
 end;
 
+procedure TMainForm.btnMostrarComplementoClick(Sender: TObject);
+begin
+  FComplementoHistorias.rips := rips;
+  FComplementoHistorias.ShowModal(ShowCallback);
+end;
+
+procedure TMainForm.habilitarHistoriaInicial;
+begin
+  UniPanel1.Visible:=true;
+  nombreAcom.Enabled := true;
+end;
+
+procedure TMainForm.ShowCallback(Sender: TComponent; Asresult: Integer);
+
+begin
+  if not UniMainModule.QueryGrid.IsEmpty then
+  begin
+    lblnombrepac.Text := UniMainModule.QueryGrid.FieldByName
+      ('nombrecompleto').AsString;
+    lblidenpac.Text := UniMainModule.QueryGrid.FieldByName('afcodigo').AsString;
+    lblfechanacpac.Text := UniMainModule.QueryGrid.FieldByName
+      ('fecha_nacimiento').AsString;
+    lbledadpac.Text := UniMainModule.QueryGrid.FieldByName('e1').AsString;
+    lblsexopac.Text := UniMainModule.QueryGrid.FieldByName('sexo').AsString;
+    lblmuncipiopac.Text := UniMainModule.QueryGrid.FieldByName
+      ('municipio').AsString;
+    lblepspac.Text := UniMainModule.QueryGrid.FieldByName('nombre_eps')
+      .AsString;
+    lblRips.Text := UniMainModule.QueryGrid.FieldByName('consecutivo').AsString;
+    lblContrato.Text := UniMainModule.QueryGrid.FieldByName
+      ('tcontrato').AsString;
+    rips := UniMainModule.QueryGrid.FieldByName('consecutivo').AsString;
+    if not rips.IsEmpty then
+    begin
+      UniMainModule.Query.SQL.Clear;
+      consulta := 'select * from evoluciones where rips=''' + rips + '''';
+      UniMainModule.Query.SQL.Add(consulta);
+      UniMainModule.Query.Open();
+
+      if UniMainModule.Query.IsEmpty then
+      begin
+        ShowMessage('Paciente viene por primera vez');
+        habilitarHistoriaInicial;
+      end
+      else
+      begin
+
+      end;
+
+    end;
+  end;
+
+end;
+
 procedure TMainForm.UniFormShow(Sender: TObject);
 begin
-identificacionMedico.Text:=UniMainModule.identificacion;
-nombreMedico.Text:=UniMainModule.NombreCompleto;
-if not UniMainModule.Query.FieldByName('foto').AsString.IsEmpty then
-begin
-imagenPerfil.Picture.Assign(UniMainModule.GetFieldToJPG(UniMainModule.Query, 'foto'));
-end;
-fechaAsignacion.DateTime:=Now;
-UniMainModule.Query.Close;
-UniPanel1.Visible:=false;
-UniPanel2.Visible:=false;
+  identificacionMedico.Text := UniMainModule.identificacion;
+  nombreMedico.Text := UniMainModule.NombreCompleto;
+  if not UniMainModule.Query.FieldByName('foto').AsString.IsEmpty then
+  begin
+    imagenPerfil.Picture.Assign
+      (UniMainModule.GetFieldToJPG(UniMainModule.Query, 'foto'));
+  end;
+  fechaAsignacion.DateTime := Now;
+  UniMainModule.Query.Close;
+  UniPanel1.Visible := false;
+  UniPanel2.Visible := false;
 
 end;
 
 procedure TMainForm.UniSpeedButton6Click(Sender: TObject);
+var
+  consulta: string;
 begin
-FMedicosCita.fechaAsignacion.DateTime:=fechaAsignacion.DateTime;
-FMedicosCita.ShowModal();
-if not UniMainModule.QueryGrid.IsEmpty then
-begin
-  lblnombrepac.Text:=UniMainModule.QueryGrid.FieldByName('nombrecompleto').AsString;
-  lblidenpac.Text:=UniMainModule.QueryGrid.FieldByName('afcodigo').AsString;
-  lblfechanacpac.Text:=UniMainModule.QueryGrid.FieldByName('fecha_nacimiento').AsString;
-  lbledadpac.Text:=UniMainModule.QueryGrid.FieldByName('e1').AsString;
-  lblsexopac.Text:=UniMainModule.QueryGrid.FieldByName('sexo').AsString;
-  lblmuncipiopac.Text:=UniMainModule.QueryGrid.FieldByName('municipio').AsString;
-  lblepspac.Text:=UniMainModule.QueryGrid.FieldByName('nombre_eps').AsString;
-  lblRips.Text:=UniMainModule.QueryGrid.FieldByName('consecutivo').AsString;
-end
-else
-begin
-  ShowMessage('Sin resultado');
-end;
+  FMedicosCita.fechaAsignacion.DateTime := fechaAsignacion.DateTime;
+  FMedicosCita.ShowModal(ShowCallback);
+
 end;
 
 initialization
-  RegisterAppFormClass(TMainForm);
+
+RegisterAppFormClass(TMainForm);
 
 end.

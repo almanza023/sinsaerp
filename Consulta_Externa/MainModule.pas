@@ -22,8 +22,9 @@ type
   public
     { Public declarations }
     i: Integer;
-   usuario, identificacion,  NombreCompleto, codigoM, ruta: string;
+   usuario, identificacion,  NombreCompleto, codigoM, ruta, servicio: string;
    function GetFieldToJPG(DataSet: TFDQuery; FieldName: String): TJPEGImage;
+   function getSercicio(): string;
 
 
   end;
@@ -70,6 +71,12 @@ begin
       Stream.Free;
     end;
   end;
+end;
+
+function TUniMainModule.getSercicio: string;
+begin
+servicio:='Consulta Externa';
+Result :=servicio;
 end;
 
 initialization
